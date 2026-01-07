@@ -15,4 +15,9 @@ export interface ChartDataPoint {
   balance: number;
 }
 
-export type ViewMode = 'daily' | 'weekly' | 'monthly';
+export type ViewMode = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'overall';
+
+export interface DateRange {
+  startDate: Date | null;
+  endDate: Date | null;
+}

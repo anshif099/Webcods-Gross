@@ -16,6 +16,8 @@ const Index = () => {
     chartData,
     viewMode,
     setViewMode,
+    dateRange,
+    setDateRange,
     loading,
     error,
   } = useTransactions();
@@ -61,6 +63,8 @@ const Index = () => {
               data={chartData}
               viewMode={viewMode}
               onViewModeChange={setViewMode}
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
             />
 
             {/* Transactions List */}

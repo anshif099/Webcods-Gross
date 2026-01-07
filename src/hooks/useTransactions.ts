@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Transaction, ChartDataPoint, ViewMode } from '@/types/finance';
-import { format, startOfWeek, startOfMonth } from 'date-fns';
+import { Transaction, ChartDataPoint, ViewMode, DateRange } from '@/types/finance';
+import { format, startOfWeek, startOfMonth, startOfYear } from 'date-fns';
 import { initAuth } from '@/lib/firebase';
 import {
   saveTransaction as saveTransactionToFirebase,
@@ -8,12 +8,14 @@ import {
   subscribeToTransactions,
   migrateLocalStorageData
 } from '@/services/transactionService';
+import { filterTransactionsByDateRange } from '@/utils/dateUtils';
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
 export const useTransactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('daily');
+  const [dateRange, setDateRange] = useState<DateRange>({ startDate: null, endDate: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -112,20 +114,43 @@ export const useTransactions = () => {
   const balance = useMemo(() => totalIncome - totalExpenses, [totalIncome, totalExpenses]);
 
   const chartData = useMemo((): ChartDataPoint[] => {
+    // Filter transactions by custom date range if set
+    const filteredTransactions = filterTransactionsByDateRange(transactions, dateRange);
+
+    if (viewMode === 'overall') {
+      // For overall view, show a single aggregated entry
+      const totalInc = filteredTransactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + t.amount, 0);
+      const totalExp = filteredTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      return [{
+        date: 'All Time',
+        income: totalInc,
+        expense: totalExp,
+        balance: totalInc - totalExp,
+      }];
+    }
+
     const grouped: Record<string, { income: number; expense: number }> = {};
 
-    transactions.forEach(t => {
+    filteredTransactions.forEach(t => {
       let key: string;
       const date = new Date(t.date);
 
       switch (viewMode) {
+        case 'yearly':
+          key = format(date, 'yyyy');
+          break;
         case 'weekly':
           key = format(startOfWeek(date, { weekStartsOn: 1 }), 'MMM d');
           break;
         case 'monthly':
           key = format(startOfMonth(date), 'MMM yyyy');
           break;
-        default:
+        default: // 'daily'
           key = format(date, 'MMM d');
       }
 
@@ -150,7 +175,7 @@ export const useTransactions = () => {
         balance: runningBalance,
       };
     });
-  }, [transactions, viewMode]);
+  }, [transactions, viewMode, dateRange]);
 
   return {
     transactions,
@@ -162,6 +187,8 @@ export const useTransactions = () => {
     chartData,
     viewMode,
     setViewMode,
+    dateRange,
+    setDateRange,
     loading,
     error,
   };

@@ -1,19 +1,22 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { ChartDataPoint, ViewMode } from '@/types/finance';
+import { ChartDataPoint, ViewMode, DateRange } from '@/types/finance';
 import { Button } from '@/components/ui/button';
-import { BarChart3, LineChart, Calendar } from 'lucide-react';
+import { BarChart3, LineChart } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { DateRangePicker } from '@/components/DateRangePicker';
 
 interface FinanceChartProps {
   data: ChartDataPoint[];
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
+  dateRange: DateRange;
+  onDateRangeChange: (dateRange: DateRange) => void;
 }
 
 type ChartType = 'area' | 'bar';
 
-export const FinanceChart = ({ data, viewMode, onViewModeChange }: FinanceChartProps) => {
+export const FinanceChart = ({ data, viewMode, onViewModeChange, dateRange, onDateRangeChange }: FinanceChartProps) => {
   const [chartType, setChartType] = useState<ChartType>('area');
 
   const formatCurrency = (value: number) => {
@@ -53,13 +56,13 @@ export const FinanceChart = ({ data, viewMode, onViewModeChange }: FinanceChartP
 
   return (
     <div className="bg-card rounded-2xl border border-border p-6 shadow-card">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">Financial Overview</h2>
-          <p className="text-sm text-muted-foreground">Track your income and expenses</p>
-        </div>
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">Financial Overview</h2>
+            <p className="text-sm text-muted-foreground">Track your income and expenses</p>
+          </div>
 
-        <div className="flex items-center gap-2">
           {/* Chart Type Toggle */}
           <div className="flex items-center bg-secondary rounded-lg p-1">
             <Button
@@ -85,10 +88,13 @@ export const FinanceChart = ({ data, viewMode, onViewModeChange }: FinanceChartP
               <BarChart3 className="w-4 h-4" />
             </Button>
           </div>
+        </div>
 
+        {/* View Mode and Date Range Controls */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           {/* View Mode Toggle */}
-          <div className="flex items-center bg-secondary rounded-lg p-1">
-            {(['daily', 'weekly', 'monthly'] as ViewMode[]).map((mode) => (
+          <div className="flex items-center bg-secondary rounded-lg p-1 flex-wrap">
+            {(['daily', 'weekly', 'monthly', 'yearly', 'overall'] as ViewMode[]).map((mode) => (
               <Button
                 key={mode}
                 variant="ghost"
@@ -103,6 +109,12 @@ export const FinanceChart = ({ data, viewMode, onViewModeChange }: FinanceChartP
               </Button>
             ))}
           </div>
+
+          {/* Date Range Picker */}
+          <DateRangePicker
+            dateRange={dateRange}
+            onDateRangeChange={onDateRangeChange}
+          />
         </div>
       </div>
 
@@ -125,15 +137,15 @@ export const FinanceChart = ({ data, viewMode, onViewModeChange }: FinanceChartP
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 92%)" vertical={false} />
-              <XAxis 
-                dataKey="date" 
-                axisLine={false} 
+              <XAxis
+                dataKey="date"
+                axisLine={false}
                 tickLine={false}
                 tick={{ fill: 'hsl(220, 10%, 46%)', fontSize: 12 }}
                 dy={10}
               />
-              <YAxis 
-                axisLine={false} 
+              <YAxis
+                axisLine={false}
                 tickLine={false}
                 tickFormatter={formatCurrency}
                 tick={{ fill: 'hsl(220, 10%, 46%)', fontSize: 12 }}
@@ -165,15 +177,15 @@ export const FinanceChart = ({ data, viewMode, onViewModeChange }: FinanceChartP
           ) : (
             <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 92%)" vertical={false} />
-              <XAxis 
-                dataKey="date" 
-                axisLine={false} 
+              <XAxis
+                dataKey="date"
+                axisLine={false}
                 tickLine={false}
                 tick={{ fill: 'hsl(220, 10%, 46%)', fontSize: 12 }}
                 dy={10}
               />
-              <YAxis 
-                axisLine={false} 
+              <YAxis
+                axisLine={false}
                 tickLine={false}
                 tickFormatter={formatCurrency}
                 tick={{ fill: 'hsl(220, 10%, 46%)', fontSize: 12 }}
